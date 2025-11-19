@@ -10,6 +10,7 @@ export default function AdminDrawerLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Drawer>
+        <Drawer.Screen name="index" options={{ drawerLabel: "Главная", title: "Главная" }} />
         <Drawer.Screen name="requests" options={{ drawerLabel: "Заявки", title: "Заявки" }} />
         <Drawer.Screen name="product" options={{ drawerLabel: "Управление продуктами", title: "Управление продуктами" }} />
         <Drawer.Screen name="warehouses" options={{ drawerLabel: "Управление складами", title: "Управление складами" }} />

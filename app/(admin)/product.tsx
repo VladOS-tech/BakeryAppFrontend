@@ -111,7 +111,7 @@ export default function ProductsPage() {
         <Text style={styles.header}>Справочник продуктов</Text>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal} activeOpacity={0.8}>
           <MaterialIcons name="add-circle" size={24} color="#42a5f5" />
-          <Text style={styles.addButtonText}>Добавить булочную</Text>
+          <Text style={styles.addButtonText}>Добавить продукт</Text>
         </TouchableOpacity>
       </View>
       {loading && <Text style={{ color: '#aaa', marginTop: 15 }}>Загрузка...</Text>}
