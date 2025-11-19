@@ -1,31 +1,31 @@
-import WarehouseForm from '@/components/WarehouseForm';
+import BakeryForm from '@/components/BakeryForm';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-interface Warehouse {
+interface Bakery {
   id: number;
   name: string;
 }
 
-export default function WarehousesPage() {
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+export default function BakeriesPage() {
+  const [bakeries, setBakeries] = useState<Bakery[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [currentWarehouse, setCurrentWarehouse] = useState<Warehouse | null>(null);
+  const [currentBakery, setCurrentBakery] = useState<Bakery | null>(null);
   const [initialName, setInitialName] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:3000/warehouses')
+    fetch('http://localhost:3000/bakeries')
       .then(res => res.json())
       .then(data => {
-        setWarehouses(data);
+        setBakeries(data);
         setLoading(false);
       })
       .catch(() => {
-        Alert.alert('Ошибка', 'Не удалось получить склады');
+        Alert.alert('Ошибка', 'Не удалось получить булочные');
         setLoading(false);
       });
   }, []);
@@ -33,64 +33,64 @@ export default function WarehousesPage() {
   const openAddModal = () => {
     setEditMode(false);
     setInitialName('');
-    setCurrentWarehouse(null);
+    setCurrentBakery(null);
     setModalVisible(true);
   };
 
-  const openEditModal = (warehouse: Warehouse) => {
+  const openEditModal = (bakery: Bakery) => {
     setEditMode(true);
-    setCurrentWarehouse(warehouse);
-    setInitialName(warehouse.name);
+    setCurrentBakery(bakery);
+    setInitialName(bakery.name);
     setModalVisible(true);
   };
 
-  const addWarehouse = (name: string) => {
+  const addBakery = (name: string) => {
     if (!name) {
       Alert.alert('Ошибка', 'Заполните название');
       return;
     }
-    fetch('http://localhost:3000/warehouses', {
+    fetch('http://localhost:3000/bakeries', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name }),
     })
       .then(res => res.json())
-      .then(newWarehouse => {
-        setWarehouses(prev => [...prev, newWarehouse]);
+      .then(newBakery => {
+        setBakeries(prev => [...prev, newBakery]);
         setModalVisible(false);
       })
-      .catch(() => Alert.alert('Ошибка', 'Не удалось добавить склад'));
+      .catch(() => Alert.alert('Ошибка', 'Не удалось добавить булочную'));
   };
 
-  const editWarehouse = (name: string) => {
-    if (!currentWarehouse) return;
+  const editBakery = (name: string) => {
+    if (!currentBakery) return;
     if (!name) {
       Alert.alert('Ошибка', 'Заполните название');
       return;
     }
-    fetch(`http://localhost:3000/warehouses/${currentWarehouse.id}`, {
+    fetch(`http://localhost:3000/bakeries/${currentBakery.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name }),
     })
       .then(res => res.json())
-      .then(updatedWarehouse => {
-        setWarehouses(prev =>
-          prev.map(w => (w.id === currentWarehouse.id ? updatedWarehouse : w))
+      .then(updatedBakery => {
+        setBakeries(prev =>
+          prev.map(b => (b.id === currentBakery.id ? updatedBakery : b))
         );
         setModalVisible(false);
       })
-      .catch(() => Alert.alert('Ошибка', 'Не удалось обновить склад'));
+      .catch(() => Alert.alert('Ошибка', 'Не удалось обновить булочную'));
   };
 
-  const removeWarehouse = (id: number) => {
-    fetch(`http://localhost:3000/warehouses/${id}`, { method: 'DELETE' })
+  const removeBakery = (id: number) => {
+    fetch(`http://localhost:3000/bakeries/${id}`, { method: 'DELETE' })
       .then(res => {
         if (res.ok) {
-          setWarehouses(prev => prev.filter(w => w.id !== id));
-          Alert.alert('Успех', 'Склад удалён');
+          setBakeries(prev => prev.filter(b => b.id !== id));
+          Alert.alert('Успех', 'Булочная удалена');
         } else {
-          Alert.alert('Ошибка', 'Не удалось удалить склад');
+          Alert.alert('Ошибка', 'Не удалось удалить булочную');
         }
       })
       .catch(() => Alert.alert('Ошибка', 'Ошибка удаления'));
@@ -99,7 +99,7 @@ export default function WarehousesPage() {
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.header}>Справочник складов</Text>
+        <Text style={styles.header}>Справочник булочных</Text>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal} activeOpacity={0.8}>
           <MaterialIcons name="add-circle" size={24} color="#42a5f5" />
           <Text style={styles.addButtonText}>Добавить булочную</Text>
@@ -107,15 +107,15 @@ export default function WarehousesPage() {
       </View>
       {loading && <Text style={{ color: '#aaa', marginTop: 15 }}>Загрузка...</Text>}
       <FlatList
-        data={warehouses}
+        data={bakeries}
         keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => (
-          <View style={styles.warehouseRow}>
-            <Text style={styles.warehouseName}>{item.name}</Text>
+          <View style={styles.bakeryRow}>
+            <Text style={styles.bakeryName}>{item.name}</Text>
             <TouchableOpacity onPress={() => openEditModal(item)}>
               <Text style={styles.edit}>✎ Редактировать</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => removeWarehouse(item.id)}>
+            <TouchableOpacity onPress={() => removeBakery(item.id)}>
               <Text style={styles.delete}>Удалить</Text>
             </TouchableOpacity>
           </View>
@@ -124,8 +124,8 @@ export default function WarehousesPage() {
 
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalBg}>
-            <WarehouseForm
-              onSubmit={editMode ? editWarehouse : addWarehouse}
+            <BakeryForm
+              onSubmit={editMode ? editBakery : addBakery}
               onCancel={() => setModalVisible(false)}
               initialName={initialName}
               editMode={editMode}
@@ -138,9 +138,9 @@ export default function WarehousesPage() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24, backgroundColor: '#111' },
-  header: { color: '#fff', fontSize: 22, marginBottom: 15 },
-  warehouseRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 7 },
-  warehouseName: { color: '#fff', flex: 2 },
+  header: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
+  bakeryRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 7 },
+  bakeryName: { color: '#fff', flex: 2 },
   edit: { color: '#0af', marginLeft: 10 },
   delete: { color: '#f44', marginLeft: 15 },
   modalBg: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.65)' },
