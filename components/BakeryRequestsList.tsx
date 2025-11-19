@@ -1,5 +1,4 @@
-import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface Product {
@@ -16,16 +15,82 @@ interface RequestItem {
 
 interface Request {
   id: number;
-  created_at: string;
-  request_items?: RequestItem[];
+  bakery: Bakery;
+  request_items: RequestItem[];
+  request_date: string;
+}
+
+interface Bakery {
+  id: number;
+  name: string;
 }
 
 
 interface Props {
-  bakeryId: string;
+  requests: Request[];
+  onRequestPress?: (requestId: number) => void;
 }
 
-const BakeryRequestsList: React.FC<Props> = ({ bakeryId }) => {
+const BakeryRequestsList: React.FC<Props> = ({ requests, onRequestPress }) => {
+  if (!requests.length) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.emptyText}>Нет заявок для булочных</Text>
+      </View>
+    );
+  }
+
+  return (
+    <FlatList
+      data={requests}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={({ item }) => (
+        <View style={styles.bakeryBlock}>
+          <Text style={styles.bakeryName}>{item.bakery.name}</Text>
+          {item.request_items.map((ri) => (
+            <TouchableOpacity
+              key={ri.id}
+              onPress={() => onRequestPress?.(item.id)}
+              style={styles.requestItem}
+            >
+              <Text style={styles.productText}>
+                {ri.product.name}: {ri.quantity} шт.
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+      contentContainerStyle={styles.listContent}
+    />
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  emptyText: { color: '#aaa', fontSize: 16 },
+  listContent: { paddingBottom: 30 },
+  bakeryBlock: {
+    marginBottom: 25,
+    padding: 15,
+    backgroundColor: '#222',
+    borderRadius: 8,
+  },
+  bakeryName: {
+    color: '#0af',
+    fontSize: 20,
+    marginBottom: 10,
+    fontWeight: '700',
+  },
+  requestItem: {
+    paddingVertical: 6,
+  },
+  productText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+});
+
+/*const BakeryRequestsList: React.FC<Props> = ({ bakeryId }) => {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
@@ -98,5 +163,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-
+*/
 export default BakeryRequestsList;
