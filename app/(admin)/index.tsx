@@ -86,24 +86,24 @@ const today = `${yyyy}-${mm}-${dd}`;
       });
   }, []);
 
-  // Проверяем, есть ли заявка (не пустой массив)
   const hasRequest = requests.length > 0;
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Заявка на {formatDateRuFull(today)}</Text>
-      <TabSwitcher tab={tab} setTab={setTab} />
+      {hasRequest && (
+        <TabSwitcher tab={tab} setTab={setTab} />
+      )}
 
       {loading && <Text style={styles.text}>Загрузка...</Text>}
 
       {!loading && !hasRequest && (
         <Text style={styles.text}>Заявок на сегодня нет.</Text>
       )}
-
       {!loading && hasRequest && tab === 'bakeries' && (
         <BakeryRequestsList
           requests={requests}
-          onRequestPress={(id) => router.push(`/bakeries/1/requests/${id}`)} // Уточни bakeryId при необходимости
+          onRequestPress={(id) => router.push(`/bakeries/1/requests/${id}`)}
         />
       )}
 
