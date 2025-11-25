@@ -1,5 +1,6 @@
 import BakeryForm from '@/components/BakeryForm';
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -18,17 +19,25 @@ export default function BakeriesPage() {
   const [initialName, setInitialName] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:3000/bakeries')
-      .then(res => res.json())
-      .then(data => {
-        setBakeries(data);
-        setLoading(false);
+    const fetchBakeries = async () => {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      fetch('http://localhost:3000/bakeries', {
+        headers: { 'Authorization': `Bearer ${token}` }
       })
-      .catch(() => {
-        Alert.alert('Ошибка', 'Не удалось получить булочные');
-        setLoading(false);
-      });
+        .then(res => res.json())
+        .then(data => {
+          setBakeries(data);
+          setLoading(false);
+        })
+        .catch(() => {
+          Alert.alert('Ошибка', 'Не удалось получить булочные');
+          setLoading(false);
+        });
+    };
+    fetchBakeries();
   }, []);
+  
 
   const openAddModal = () => {
     setEditMode(false);
@@ -44,14 +53,18 @@ export default function BakeriesPage() {
     setModalVisible(true);
   };
 
-  const addBakery = (name: string) => {
+  const addBakery = async (name: string) => {
     if (!name) {
       Alert.alert('Ошибка', 'Заполните название');
       return;
     }
+    const token = await AsyncStorage.getItem('token');
     fetch('http://localhost:3000/bakeries', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({ name }),
     })
       .then(res => res.json())
@@ -61,16 +74,21 @@ export default function BakeriesPage() {
       })
       .catch(() => Alert.alert('Ошибка', 'Не удалось добавить булочную'));
   };
+  
 
-  const editBakery = (name: string) => {
+  const editBakery = async (name: string) => {
     if (!currentBakery) return;
     if (!name) {
       Alert.alert('Ошибка', 'Заполните название');
       return;
     }
+    const token = await AsyncStorage.getItem('token');
     fetch(`http://localhost:3000/bakeries/${currentBakery.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({ name }),
     })
       .then(res => res.json())
@@ -82,9 +100,13 @@ export default function BakeriesPage() {
       })
       .catch(() => Alert.alert('Ошибка', 'Не удалось обновить булочную'));
   };
-
-  const removeBakery = (id: number) => {
-    fetch(`http://localhost:3000/bakeries/${id}`, { method: 'DELETE' })
+  
+  const removeBakery = async (id: number) => {
+    const token = await AsyncStorage.getItem('token');
+    fetch(`http://localhost:3000/bakeries/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => {
         if (res.ok) {
           setBakeries(prev => prev.filter(b => b.id !== id));
@@ -95,6 +117,7 @@ export default function BakeriesPage() {
       })
       .catch(() => Alert.alert('Ошибка', 'Ошибка удаления'));
   };
+  
 
   return (
     <View style={styles.container}>

@@ -1,7 +1,10 @@
 import ProductForm from '@/components/ProductForm';
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+
 
 interface Product {
   id: number;
@@ -23,16 +26,23 @@ export default function ProductsPage() {
   const [initialWarehouseId, setInitialWarehouseId] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:3000/products')
-      .then(res => res.json())
-      .then(data => {
-        setProducts(data);
-        setLoading(false);
+    const fetchProducts = async () => {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      fetch('http://localhost:3000/products', {
+        headers: { 'Authorization': `Bearer ${token}` }
       })
-      .catch(() => {
-        Alert.alert('Ошибка', 'Не удалось получить продукты');
-        setLoading(false);
-      });
+        .then(res => res.json())
+        .then(data => {
+          setProducts(data);
+          setLoading(false);
+        })
+        .catch(() => {
+          Alert.alert('Ошибка', 'Не удалось получить продукты');
+          setLoading(false);
+        });
+    };
+    fetchProducts();
   }, []);
 
   const openAddModal = () => {
@@ -53,14 +63,19 @@ export default function ProductsPage() {
     setModalVisible(true);
   };
 
-  const addProduct = (name: string, price: string, warehouseId: string) => {
+  const addProduct = async (name: string, price: string, warehouseId: string) => {
     if (!name || !price || !warehouseId) {
       Alert.alert('Ошибка', 'Заполните все поля');
       return;
     }
+
+    const token = await AsyncStorage.getItem('token');
     fetch('http://localhost:3000/products', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+       },
       body: JSON.stringify({ name, price: Number(price), warehouse_id: Number(warehouseId) }),
     })
       .then(res => res.json())
@@ -71,15 +86,19 @@ export default function ProductsPage() {
       .catch(() => Alert.alert('Ошибка', 'Не удалось добавить продукт'));
   };
 
-  const editProduct = (name: string, price: string, warehouseId: string) => {
+  const editProduct = async (name: string, price: string, warehouseId: string) => {
     if (!currentProduct) return;
     if (!name || !price || !warehouseId) {
       Alert.alert('Ошибка', 'Заполните все поля');
       return;
     }
+    const token = await AsyncStorage.getItem('token');
     fetch(`http://localhost:3000/products/${currentProduct.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
       body: JSON.stringify({ name, price: Number(price), warehouse_id: Number(warehouseId) }),
     })
       .then(res => res.json())
@@ -92,8 +111,12 @@ export default function ProductsPage() {
       .catch(() => Alert.alert('Ошибка', 'Не удалось обновить продукт'));
   };
 
-  const removeProduct = (id: number) => {
-    fetch(`http://localhost:3000/products/${id}`, { method: 'DELETE' })
+  const removeProduct = async (id: number) => {
+    const token = await AsyncStorage.getItem('token');
+    fetch(`http://localhost:3000/products/${id}`, { 
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => {
         if (res.ok) {
           setProducts(prev => prev.filter(p => p.id !== id));

@@ -15,6 +15,7 @@ export default function AdminDrawerLayout() {
         <Drawer.Screen name="product" options={{ drawerLabel: "Управление продуктами", title: "Управление продуктами" }} />
         <Drawer.Screen name="warehouses" options={{ drawerLabel: "Управление складами", title: "Управление складами" }} />
         <Drawer.Screen name="bakeries" options={{ drawerLabel: "Управление булочными", title: "Управление булочными" }} />
+        <Drawer.Screen name="staff" options={{ drawerLabel: "Управление персоналом", title: "Управление персоналом" }} />
         <Drawer.Screen name="statistics" options={{ drawerLabel: "Статистика", title: "Статистика" }} />
       </Drawer>
       <StatusBar style="auto" />

@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -37,11 +38,18 @@ export default function ProductForm({
   }, [initialName, initialPrice, initialWarehouseId]);
 
   useEffect(() => {
-    fetch('http://localhost:3000/warehouses')
-      .then(res => res.json())
-      .then(setWarehouses)
-      .catch(() => {});
+    const fetchWarehouses = async () => {
+      const token = await AsyncStorage.getItem('token');
+      fetch('http://localhost:3000/warehouses', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(setWarehouses)
+        .catch(() => {});
+    };
+    fetchWarehouses();
   }, []);
+  
 
   return (
     <View style={styles.formContainer}>

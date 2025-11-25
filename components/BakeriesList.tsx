@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -13,17 +14,24 @@ const BakeriesList: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetch('http://localhost:3000/bakeries')
-      .then(res => res.json())
-      .then(data => {
-        setBakeries(data);
-        setLoading(false);
+    const fetchBakeries = async () => {
+      const token = await AsyncStorage.getItem('token');
+      fetch('http://localhost:3000/bakeries', {
+        headers: { 'Authorization': `Bearer ${token}` }
       })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
+        .then(res => res.json())
+        .then(data => {
+          setBakeries(data);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setLoading(false);
+        });
+    };
+    fetchBakeries();
   }, []);
+  
 
   const onBakeryPress = (id: number) => {
     router.push(`/bakeries/${id}`); // Переход на страницу заявок по булочной

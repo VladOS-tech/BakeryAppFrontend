@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import ProductsList from '@/components/ProductList';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BakeryRequestsList from '../../components/BakeryRequestsList';
 import TabSwitcher from '../../components/TabSwitcher';
 import WarehouseProductsList from '../../components/WarehouseProductsList';
@@ -73,8 +74,13 @@ const mm = String(now.getMonth() + 1).padStart(2, '0');
 const dd = String(now.getDate()).padStart(2, '0');
 const today = `${yyyy}-${mm}-${dd}`;
 
-  useEffect(() => {
-    fetch(`http://localhost:3000/requests?date=${today}`)
+useEffect(() => {
+  const fetchRequests = async () => {
+    setLoading(true);
+    const token = await AsyncStorage.getItem('token');
+    fetch(`http://localhost:3000/requests?date=${today}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(data => {
         setRequests(data);
@@ -84,7 +90,10 @@ const today = `${yyyy}-${mm}-${dd}`;
         console.error("Error loading requests:", err);
         setLoading(false);
       });
-  }, []);
+  };
+  fetchRequests();
+}, []);
+
 
   const hasRequest = requests.length > 0;
 

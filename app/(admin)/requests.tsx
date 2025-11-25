@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-// Импортируй свои компоненты!
 import ProductsList from '@/components/ProductList';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BakeryRequestsList from '../../components/BakeryRequestsList';
 import WarehouseProductsList from '../../components/WarehouseProductsList';
 
-// Типы данных
 interface Product {
   id: number;
   name: string;
@@ -57,14 +56,22 @@ export default function RequestsHistoryPage() {
   const [tab, setTab] = useState<'bakeries' | 'warehouses' | 'products'>('bakeries');
 
   useEffect(() => {
-    fetch('http://localhost:3000/requests')
-      .then(res => res.json())
-      .then(data => {
-        setRequests(data);
-        setLoading(false);
+    const fetchRequests = async () => {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      fetch('http://localhost:3000/requests', {
+        headers: { 'Authorization': `Bearer ${token}` }
       })
-      .catch(() => setLoading(false));
+        .then(res => res.json())
+        .then(data => {
+          setRequests(data);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    };
+    fetchRequests();
   }, []);
+  
 
   // Группируем заявки по датам
   const requestsByDate: Record<string, Request[]> = {};

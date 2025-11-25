@@ -1,5 +1,6 @@
 import WarehouseForm from '@/components/WarehouseForm';
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -18,17 +19,25 @@ export default function WarehousesPage() {
   const [initialName, setInitialName] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:3000/warehouses')
-      .then(res => res.json())
-      .then(data => {
-        setWarehouses(data);
-        setLoading(false);
+    const fetchWarehouses = async () => {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      fetch('http://localhost:3000/warehouses', {
+        headers: { 'Authorization': `Bearer ${token}` }
       })
-      .catch(() => {
-        Alert.alert('Ошибка', 'Не удалось получить склады');
-        setLoading(false);
-      });
+        .then(res => res.json())
+        .then(data => {
+          setWarehouses(data);
+          setLoading(false);
+        })
+        .catch(() => {
+          Alert.alert('Ошибка', 'Не удалось получить склады');
+          setLoading(false);
+        });
+    };
+    fetchWarehouses();
   }, []);
+  
 
   const openAddModal = () => {
     setEditMode(false);
@@ -44,14 +53,18 @@ export default function WarehousesPage() {
     setModalVisible(true);
   };
 
-  const addWarehouse = (name: string) => {
+  const addWarehouse = async (name: string) => {
     if (!name) {
       Alert.alert('Ошибка', 'Заполните название');
       return;
     }
+    const token = await AsyncStorage.getItem('token');
     fetch('http://localhost:3000/warehouses', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({ name }),
     })
       .then(res => res.json())
@@ -61,16 +74,21 @@ export default function WarehousesPage() {
       })
       .catch(() => Alert.alert('Ошибка', 'Не удалось добавить склад'));
   };
+  
 
-  const editWarehouse = (name: string) => {
+  const editWarehouse = async (name: string) => {
     if (!currentWarehouse) return;
     if (!name) {
       Alert.alert('Ошибка', 'Заполните название');
       return;
     }
+    const token = await AsyncStorage.getItem('token');
     fetch(`http://localhost:3000/warehouses/${currentWarehouse.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({ name }),
     })
       .then(res => res.json())
@@ -82,9 +100,14 @@ export default function WarehousesPage() {
       })
       .catch(() => Alert.alert('Ошибка', 'Не удалось обновить склад'));
   };
+  
 
-  const removeWarehouse = (id: number) => {
-    fetch(`http://localhost:3000/warehouses/${id}`, { method: 'DELETE' })
+  const removeWarehouse = async (id: number) => {
+    const token = await AsyncStorage.getItem('token');
+    fetch(`http://localhost:3000/warehouses/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => {
         if (res.ok) {
           setWarehouses(prev => prev.filter(w => w.id !== id));
@@ -95,6 +118,7 @@ export default function WarehousesPage() {
       })
       .catch(() => Alert.alert('Ошибка', 'Ошибка удаления'));
   };
+  
 
   return (
     <View style={styles.container}>
