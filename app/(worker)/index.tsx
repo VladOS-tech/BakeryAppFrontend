@@ -159,43 +159,86 @@ export default function WorkerHomePage({ navigation }: any) {
     }*/
   };
 
-  const handleUpdate = async (items: { product_id: number; quantity: number }[]) => {
+  const handleUpdate = async (
+    items: {
+      product_id: number;
+      quantity: number;
+      request_item_id?: number;
+    }[]
+  ) => {
     if (!requestToday) return;
-  
+
     const token = await AsyncStorage.getItem('token');
-  
-    // 1. Удаляем все старые позиции заявки
+
+    const oldByProductId: Record<number, RequestItem> = Object.fromEntries(
+      requestToday.request_items.map(ri => [ri.product.id, ri])
+    );
+
+    const newByProductId: Record<
+      number,
+      { product_id: number; quantity: number; request_item_id?: number }
+    > = Object.fromEntries(items.map(i => [i.product_id, i]));
+
+    const toDelete = requestToday.request_items.filter(
+      ri => !newByProductId[ri.product.id]
+    );
+
+    const toUpdate = items.filter(i => {
+      const old = oldByProductId[i.product_id];
+      return old && old.quantity !== i.quantity;
+    });
+
+    const toCreate = items.filter(i => !oldByProductId[i.product_id]);
+
+    // DELETE
     await Promise.all(
-      requestToday.request_items.map(ri =>
+      toDelete.map(ri =>
         fetch(`http://localhost:3000/request_items/${ri.id}`, {
           method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         })
       )
     );
-  
-    // 2. Создаём новые позиции по текущему набору items
+
+    // PATCH
     await Promise.all(
-      items.map(({ product_id, quantity }) =>
+      toUpdate.map(i => {
+        const ri = oldByProductId[i.product_id];
+        return fetch(`http://localhost:3000/request_items/${ri.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            request_item: { quantity: i.quantity },
+          }),
+        });
+      })
+    );
+
+    // POST
+    await Promise.all(
+      toCreate.map(i =>
         fetch('http://localhost:3000/request_items', {
           method: 'POST',
           headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             request_item: {
               request_id: requestToday.id,
-              product_id,
-              quantity
-            }
-          })
+              product_id: i.product_id,
+              quantity: i.quantity,
+            },
+          }),
         })
       )
     );
-  
+
     setEditing(false);
-    setNow(new Date()); // перезагрузим заявку
+    setNow(new Date());
   };
 
   if (loading || profileLoading) {
@@ -274,30 +317,46 @@ export default function WorkerHomePage({ navigation }: any) {
         </TouchableOpacity>
       )}
 
-      {requestToday && (
-        <View style={styles.requestCard}>
-          <Text style={styles.sectionTitle}>Ваша заявка:</Text>
-          {requestToday.request_items.map(item => (
-            <Text style={styles.product} key={item.id}>- {item.product.name}: {item.quantity} шт.</Text>
-          ))}
+{requestToday && (
+  <View style={styles.requestCard}>
+    <Text style={styles.sectionTitle}>Ваша заявка:</Text>
+    {requestToday.request_items.map(item => (
+      <Text style={styles.product} key={item.id}>
+        - {item.product.name}: {item.quantity} шт.
+      </Text>
+    ))}
 
-        {canEdit ? (
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={async () => {
-                  await loadProducts();
-                  setEditing(true);
-                }}
-              >
-                <Text style={styles.addButtonText}>Изменить заявку</Text>
-              </TouchableOpacity>
-            ) : (
-              <Text style={styles.disabledEdit}>
-                Редактирование доступно с 06:00 до 14:00
-              </Text>
-            )}
-        </View>
-      )}
+    {/* ВРЕМЕННО: редактирование всегда доступно */}
+    <TouchableOpacity
+      style={styles.editButton}
+      onPress={async () => {
+        await loadProducts();
+        setEditing(true);
+      }}
+    >
+      <Text style={styles.addButtonText}>Изменить заявку</Text>
+    </TouchableOpacity>
+
+    {/*
+    {canEdit ? (
+      <TouchableOpacity
+        style={styles.editButton}
+        onPress={async () => {
+          await loadProducts();
+          setEditing(true);
+        }}
+      >
+        <Text style={styles.addButtonText}>Изменить заявку</Text>
+      </TouchableOpacity>
+    ) : (
+      <Text style={styles.disabledEdit}>
+        Редактирование доступно с 06:00 до 14:00
+      </Text>
+    )}
+    */}
+  </View>
+)}
+
 
     <TouchableOpacity
       style={styles.historyButton}
