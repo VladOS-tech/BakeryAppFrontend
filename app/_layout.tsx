@@ -42,19 +42,18 @@ export default function RootLayout() {
       <StatusBar style="auto" />
     </ThemeProvider>
   );
-}*/
+}
 
 import { Stack } from 'expo-router';
 
 export default function RootLayout() {
   return (
     <Stack>
-      {/* Точка входа для админки */}
       <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-      {/* Можно добавить другие служебные страницы */}
+      <Stack.Screen name="login" options={{ headerShown: false }} />
     </Stack>
   );
 }
-
+*/
 
 

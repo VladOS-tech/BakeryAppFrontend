@@ -23,8 +23,13 @@ export default function LoginScreen({ navigation }: any) {
       const data = await res.json();
       if (res.ok && data.token) {
         await AsyncStorage.setItem('token', data.token);
+        if (data.name) await AsyncStorage.setItem('userName', data.name);
+        if (data.bakeries && Array.isArray(data.bakeries) && data.bakeries[0]) {
+          await AsyncStorage.setItem('bakeryName', data.bakeries[0].name);
+          await AsyncStorage.setItem('bakeryId', String(data.bakeries[0].id));
+        }
+        if (data.id) await AsyncStorage.setItem('userId', String(data.id));
 
-        // Переход по роли
         if (data.role === "worker") {
           router.replace('/(worker)');
         } else if (data.role === "manager") router.replace('/(admin)');
