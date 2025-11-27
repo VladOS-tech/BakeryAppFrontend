@@ -1,8 +1,10 @@
 // app/boss/audit_history.tsx (путь подставь свой)
+import { API_BASE_URL } from '@/constants/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+
 
 interface User {
   id: number;
@@ -54,27 +56,82 @@ export default function AuditHistoryPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const loadLogs = async () => {
-      setLoading(true);
-      const token = await AsyncStorage.getItem('token');
+  const [mode, setMode] = useState<'today' | 'all'>('today');
+  const [selectedBakeryId, setSelectedBakeryId] = useState<number | null>(null);
 
-      const res = await fetch('http://localhost:3000/audit_logs', {
-        headers: { Authorization: `Bearer ${token}` },
+  const [offset, setOffset] = useState(0);
+  const PAGE_SIZE = 50;
+  const [hasMore, setHasMore] = useState(true);
+  const [allBakeries, setAllBakeries] = useState<{ id: number; name: string }[]>([]);
+
+  const bakeryOptions = React.useMemo(
+    () => {
+      const map = new Map<number, string>();
+      logs.forEach(log => {
+        const id = Number(log.data?.bakery_id);
+        if (!id) return;
+        const name =
+          log.data?.bakery_name || `Булочная #${log.data?.bakery_id}`;
+        if (!map.has(id)) map.set(id, name);
       });
+      return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+    },
+    [logs]
+  );
 
-      if (res.ok) {
-        const data: AuditLog[] = await res.json();
-        setLogs(data);
-      } else {
-        // опционально: показать ошибку
+
+  const loadLogs = async (reset: boolean) => {
+    setLoading(true);
+    const token = await AsyncStorage.getItem('token');
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const params: string[] = [];
+
+    if (mode === 'today') {
+      params.push(`from=${todayStr}`, `to=${todayStr}`);
+    }
+
+    if (selectedBakeryId) {
+      params.push(`bakery_id=${selectedBakeryId}`);
+    }
+
+    const currentOffset = reset ? 0 : offset;
+    params.push(`limit=${PAGE_SIZE}`, `offset=${currentOffset}`);
+
+    const res = await fetch(
+      `${API_BASE_URL}/audit_logs?${params.join('&')}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
       }
+    );
 
-      setLoading(false);
-    };
+    if (res.ok) {
+      const data: AuditLog[] = await res.json();
+      setHasMore(data.length === PAGE_SIZE);
+      setLogs(prev => (reset ? data : [...prev, ...data]));
+      setOffset(currentOffset + data.length);
 
-    loadLogs();
-  }, []);
+      if (allBakeries.length === 0 && !selectedBakeryId) {
+        const map = new Map<number, string>();
+        data.forEach(log => {
+          const id = Number(log.data?.bakery_id);
+          if (!id) return;
+          const name =
+            log.data?.bakery_name || `Булочная #${log.data?.bakery_id}`;
+          if (!map.has(id)) map.set(id, name);
+        });
+        setAllBakeries(
+          Array.from(map.entries()).map(([id, name]) => ({ id, name }))
+        );
+      }
+    }
+
+    setLoading(false);
+  };
+
+  React.useEffect(() => {
+    loadLogs(true); // первый запуск и при смене режима/булочной
+  }, [mode, selectedBakeryId]);
 
   const renderItem = ({ item }: { item: AuditLog }) => (
     <View style={styles.logCard}>
@@ -110,20 +167,96 @@ export default function AuditHistoryPage() {
     <View style={styles.container}>
       <Text style={styles.header}>Журнал действий работников</Text>
 
-      {loading ? (
+      {/* Переключатель режимов */}
+      <View style={styles.modeRow}>
+        <Text
+          style={[
+            styles.modeButton,
+            mode === 'today' && styles.modeButtonActive,
+          ]}
+          onPress={() => setMode('today')}
+        >
+          Сегодня
+        </Text>
+        <Text
+          style={[
+            styles.modeButton,
+            mode === 'all' && styles.modeButtonActive,
+          ]}
+          onPress={() => {
+            setOffset(0);
+            setMode('all');
+          }}
+        >
+          Все
+        </Text>
+      </View>
+
+      {/* Фильтр по булочной (простая версия: по данным логов) */}
+      <View style={styles.bakeryRow}>
+        <Text
+          style={[
+            styles.bakeryChip,
+            selectedBakeryId === null && styles.bakeryChipActive,
+          ]}
+          onPress={() => {
+            setSelectedBakeryId(null);
+            setOffset(0);
+          }}
+        >
+          Все булочные
+        </Text>
+
+        {allBakeries.map(b => (
+          <Text
+            key={b.id}
+            style={[
+              styles.bakeryChip,
+              selectedBakeryId === b.id && styles.bakeryChipActive,
+            ]}
+            onPress={() => {
+              setSelectedBakeryId(b.id);
+              setOffset(0);
+            }}
+          >
+            {b.name}
+          </Text>
+        ))}
+      </View>
+
+      {loading && logs.length === 0 ? (
         <ActivityIndicator color="#42a5f5" />
       ) : logs.length === 0 ? (
         <Text style={styles.text}>Пока нет записей в журнале.</Text>
       ) : (
-        <FlatList
-          data={logs}
-          keyExtractor={item => String(item.id)}
-          renderItem={renderItem}
-        />
+        <>
+          <FlatList
+            data={logs}
+            keyExtractor={item => String(item.id)}
+            renderItem={renderItem}
+          />
+
+          {mode === 'all' && hasMore && !loading && (
+            <Text
+              style={styles.moreButton}
+              onPress={() => loadLogs(false)}
+            >
+              Показать ещё
+            </Text>
+          )}
+
+          {loading && (
+            <ActivityIndicator
+              color="#42a5f5"
+              style={{ marginTop: 10 }}
+            />
+          )}
+        </>
       )}
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#111', padding: 20 },
@@ -135,4 +268,40 @@ const styles = StyleSheet.create({
   user: { color: '#fff', fontWeight: '600', fontSize: 15 },
   action: { color: '#42a5f5', marginTop: 2, fontSize: 14 },
   details: { color: '#ccc', marginTop: 4, fontSize: 13 },
+  modeRow: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  modeButton: {
+    color: '#aaa',
+    marginRight: 16,
+    fontSize: 15,
+  },
+  modeButtonActive: {
+    color: '#42a5f5',
+    fontWeight: 'bold',
+  },
+  bakeryRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 10,
+  },
+  bakeryChip: {
+    color: '#aaa',
+    marginRight: 10,
+    marginBottom: 6,
+    fontSize: 14,
+  },
+  bakeryChipActive: {
+    color: '#42a5f5',
+    fontWeight: '600',
+  },
+  moreButton: {
+    color: '#42a5f5',
+    textAlign: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+    fontSize: 15,
+  },
+
 });

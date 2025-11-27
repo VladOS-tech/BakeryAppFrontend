@@ -1,4 +1,5 @@
 import WarehouseForm from '@/components/WarehouseForm';
+import { API_BASE_URL } from '@/constants/config';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
@@ -22,7 +23,7 @@ export default function WarehousesPage() {
     const fetchWarehouses = async () => {
       setLoading(true);
       const token = await AsyncStorage.getItem('token');
-      fetch('http://localhost:3000/warehouses', {
+      fetch(`${API_BASE_URL}/warehouses`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -59,7 +60,7 @@ export default function WarehousesPage() {
       return;
     }
     const token = await AsyncStorage.getItem('token');
-    fetch('http://localhost:3000/warehouses', {
+    fetch(`${API_BASE_URL}/warehouses`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -83,7 +84,7 @@ export default function WarehousesPage() {
       return;
     }
     const token = await AsyncStorage.getItem('token');
-    fetch(`http://localhost:3000/warehouses/${currentWarehouse.id}`, {
+    fetch(`${API_BASE_URL}/warehouses/${currentWarehouse.id}`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -104,7 +105,7 @@ export default function WarehousesPage() {
 
   const removeWarehouse = async (id: number) => {
     const token = await AsyncStorage.getItem('token');
-    fetch(`http://localhost:3000/warehouses/${id}`, {
+    fetch(`${API_BASE_URL}/warehouses/${id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     })

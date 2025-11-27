@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import ProductsList from '@/components/ProductList';
+import { API_BASE_URL } from '@/constants/config';
 
 interface Warehouse {
   id: number;
@@ -60,7 +61,7 @@ export default function BakeryRequestsHistoryPage() {
       const token = await AsyncStorage.getItem('token');
       const bakeryId = await AsyncStorage.getItem('bakeryId');
 
-      const res = await fetch('http://localhost:3000/requests', {
+      const res = await fetch(`${API_BASE_URL}/requests`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
 

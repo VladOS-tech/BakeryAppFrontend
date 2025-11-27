@@ -1,8 +1,10 @@
 import BakeryForm from '@/components/BakeryForm';
+import { API_BASE_URL } from '@/constants/config';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
 
 interface Bakery {
   id: number;
@@ -22,7 +24,7 @@ export default function BakeriesPage() {
     const fetchBakeries = async () => {
       setLoading(true);
       const token = await AsyncStorage.getItem('token');
-      fetch('http://localhost:3000/bakeries', {
+      fetch(`${API_BASE_URL}/bakeries`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -59,7 +61,7 @@ export default function BakeriesPage() {
       return;
     }
     const token = await AsyncStorage.getItem('token');
-    fetch('http://localhost:3000/bakeries', {
+    fetch(`${API_BASE_URL}/bakeries`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -83,7 +85,7 @@ export default function BakeriesPage() {
       return;
     }
     const token = await AsyncStorage.getItem('token');
-    fetch(`http://localhost:3000/bakeries/${currentBakery.id}`, {
+    fetch(`${API_BASE_URL}/bakeries/${currentBakery.id}`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -103,7 +105,7 @@ export default function BakeriesPage() {
   
   const removeBakery = async (id: number) => {
     const token = await AsyncStorage.getItem('token');
-    fetch(`http://localhost:3000/bakeries/${id}`, {
+    fetch(`${API_BASE_URL}/bakeries/${id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     })

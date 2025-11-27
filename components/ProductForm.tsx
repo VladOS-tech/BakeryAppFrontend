@@ -1,8 +1,8 @@
+import { API_BASE_URL } from '@/constants/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
 
 interface Warehouse {
   id: number;
@@ -40,7 +40,7 @@ export default function ProductForm({
   useEffect(() => {
     const fetchWarehouses = async () => {
       const token = await AsyncStorage.getItem('token');
-      fetch('http://localhost:3000/warehouses', {
+      fetch(`${API_BASE_URL}/warehouses`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())

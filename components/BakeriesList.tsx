@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -16,7 +17,7 @@ const BakeriesList: React.FC = () => {
   useEffect(() => {
     const fetchBakeries = async () => {
       const token = await AsyncStorage.getItem('token');
-      fetch('http://localhost:3000/bakeries', {
+      fetch(`${API_BASE_URL}/bakeries`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())

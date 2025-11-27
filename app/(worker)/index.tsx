@@ -1,9 +1,10 @@
 import RequestForm from '@/components/RequestForm';
+import { logout } from '@/constants/auth';
+import { API_BASE_URL } from '@/constants/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
 
 interface Product {
   id: number;
@@ -79,7 +80,7 @@ export default function WorkerHomePage({ navigation }: any) {
       const token = await AsyncStorage.getItem('token');
       const userId = await AsyncStorage.getItem('userId');
       const bakeryId = await AsyncStorage.getItem('bakeryId');
-      const res = await fetch(`http://localhost:3000/requests?date=${today}`, {
+      const res = await fetch(`${API_BASE_URL}/requests?date=${today}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -97,7 +98,7 @@ export default function WorkerHomePage({ navigation }: any) {
   const loadProducts = async () => {
     setProductsLoading(true);
     const token = await AsyncStorage.getItem('token');
-    const res = await fetch('http://localhost:3000/products', {
+    const res = await fetch(`${API_BASE_URL}/products`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (res.ok) setProducts(await res.json());
@@ -110,7 +111,7 @@ export default function WorkerHomePage({ navigation }: any) {
     const userId = await AsyncStorage.getItem('userId');
     const today = new Date().toISOString().slice(0,10);
 
-    const requestRes = await fetch('http://localhost:3000/requests', {
+    const requestRes = await fetch(`${API_BASE_URL}/requests`, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json",
@@ -125,14 +126,18 @@ export default function WorkerHomePage({ navigation }: any) {
       })
     });
     if (!requestRes.ok) {
-      alert('Ошибка при создании заявки');
+      if (requestRes.status === 422 || requestRes.status === 409) {
+        alert('На эту дату заявка для этой булочной уже существует');
+      } else {
+        alert('Ошибка при создании заявки');
+      }
       return;
     }
 
     const requestData = await requestRes.json();
     const requestId = requestData.id;
     await Promise.all(items.map(async ({ product_id, quantity }) => {
-      await fetch('http://localhost:3000/request_items', {
+      await fetch(`${API_BASE_URL}/request_items`, {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
@@ -193,7 +198,7 @@ export default function WorkerHomePage({ navigation }: any) {
     // DELETE
     await Promise.all(
       toDelete.map(ri =>
-        fetch(`http://localhost:3000/request_items/${ri.id}`, {
+        fetch(`${API_BASE_URL}/request_items/${ri.id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -204,7 +209,7 @@ export default function WorkerHomePage({ navigation }: any) {
     await Promise.all(
       toUpdate.map(i => {
         const ri = oldByProductId[i.product_id];
-        return fetch(`http://localhost:3000/request_items/${ri.id}`, {
+        return fetch(`${API_BASE_URL}/request_items/${ri.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -220,7 +225,7 @@ export default function WorkerHomePage({ navigation }: any) {
     // POST
     await Promise.all(
       toCreate.map(i =>
-        fetch('http://localhost:3000/request_items', {
+        fetch(`${API_BASE_URL}/request_items`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -365,6 +370,13 @@ export default function WorkerHomePage({ navigation }: any) {
       <Text style={styles.historyButtonText}>История заявок</Text>
     </TouchableOpacity>
 
+    <TouchableOpacity
+      style={styles.logoutButton}
+      onPress={logout}
+    >
+      <Text style={styles.logoutButtonText}>Выйти из аккаунта</Text>
+    </TouchableOpacity>
+
     </ScrollView>
   );
 }
@@ -384,5 +396,20 @@ const styles = StyleSheet.create({
   disabledEdit: { marginTop: 12, color: "#888", fontSize: 14, fontWeight: "bold" },
   historyButton: { marginTop: 35, alignSelf: 'center', padding: 10 },
   historyButtonText: { color: "#42a5f5", fontSize: 16, fontWeight: "bold" },
-  text: { color: "#aaa", fontSize: 15, textAlign: "center", marginTop: 22 }
+  text: { color: "#aaa", fontSize: 15, textAlign: "center", marginTop: 22 },
+  logoutButton: {
+    marginTop: 10,
+    alignSelf: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#f44336',
+  },
+  logoutButtonText: {
+    color: '#f44336',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+
 });

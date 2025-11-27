@@ -1,5 +1,6 @@
 import StaffCard from '@/components/StaffCard';
 import StaffForm from '@/components/StaffForm';
+import { API_BASE_URL } from '@/constants/config';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
@@ -23,7 +24,7 @@ export default function StaffPage() {
     const fetchUsers = async () => {
       setLoading(true);
       const token = await AsyncStorage.getItem('token');
-      fetch('http://localhost:3000/users?role=worker', {
+      fetch(`${API_BASE_URL}/users?role=worker`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -31,7 +32,7 @@ export default function StaffForm({ onSubmit, onCancel, initialUser, isEdit }: S
   useEffect(() => {
     const fetchBakeries = async () => {
       const token = await AsyncStorage.getItem('token');
-      fetch('http://localhost:3000/bakeries', {
+      fetch(`${API_BASE_URL}/bakeries`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -74,8 +75,8 @@ export default function StaffForm({ onSubmit, onCancel, initialUser, isEdit }: S
     }
     const url =
       isEdit && initialUser
-        ? `http://localhost:3000/users/${initialUser.id}`
-        : 'http://localhost:3000/users';
+        ? `${API_BASE_URL}/users/${initialUser.id}`
+        : `${API_BASE_URL}/users`;
     const method = isEdit ? 'PUT' : 'POST';
     const userPayload: any = { name, phone, role: "worker" };
     if (!isEdit) userPayload.password = password;

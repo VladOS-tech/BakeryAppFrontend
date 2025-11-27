@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import ProductsList from '@/components/ProductList';
+import { API_BASE_URL } from '@/constants/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BakeryRequestsList from '../../components/BakeryRequestsList';
 import WarehouseProductsList from '../../components/WarehouseProductsList';
@@ -59,7 +60,7 @@ export default function RequestsHistoryPage() {
     const fetchRequests = async () => {
       setLoading(true);
       const token = await AsyncStorage.getItem('token');
-      fetch('http://localhost:3000/requests', {
+      fetch(`${API_BASE_URL}/requests`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())

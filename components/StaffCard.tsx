@@ -1,4 +1,5 @@
 import StaffForm from '@/components/StaffForm';
+import { API_BASE_URL } from '@/constants/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { Alert, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -26,7 +27,7 @@ export default function StaffCard({ userId, onClose, onDeleted, onEdited }: Staf
   useEffect(() => {
     const fetchUser = async () => {
       const token = await AsyncStorage.getItem('token');
-      fetch(`http://localhost:3000/users/${userId}`, {
+      fetch(`${API_BASE_URL}/users/${userId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -41,7 +42,7 @@ export default function StaffCard({ userId, onClose, onDeleted, onEdited }: Staf
 
   const handleDelete = async () => {
     const token = await AsyncStorage.getItem('token');
-    fetch(`http://localhost:3000/users/${userId}`, {
+    fetch(`${API_BASE_URL}/users/${userId}`, {
       method: "DELETE",
       headers: { 'Authorization': `Bearer ${token}` }
     })

@@ -1,6 +1,8 @@
+import { API_BASE_URL } from '@/constants/config';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+
 
 import ProductsList from '@/components/ProductList';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -78,7 +80,7 @@ useEffect(() => {
   const fetchRequests = async () => {
     setLoading(true);
     const token = await AsyncStorage.getItem('token');
-    fetch(`http://localhost:3000/requests?date=${today}`, {
+    fetch(`${API_BASE_URL}/requests?date=${today}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

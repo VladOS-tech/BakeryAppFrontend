@@ -1,10 +1,9 @@
 import ProductForm from '@/components/ProductForm';
+import { API_BASE_URL } from '@/constants/config';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-
 
 interface Product {
   id: number;
@@ -29,7 +28,7 @@ export default function ProductsPage() {
     const fetchProducts = async () => {
       setLoading(true);
       const token = await AsyncStorage.getItem('token');
-      fetch('http://localhost:3000/products', {
+      fetch(`${API_BASE_URL}/products`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -70,7 +69,7 @@ export default function ProductsPage() {
     }
 
     const token = await AsyncStorage.getItem('token');
-    fetch('http://localhost:3000/products', {
+    fetch(`${API_BASE_URL}/products`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -93,7 +92,7 @@ export default function ProductsPage() {
       return;
     }
     const token = await AsyncStorage.getItem('token');
-    fetch(`http://localhost:3000/products/${currentProduct.id}`, {
+    fetch(`${API_BASE_URL}/products/${currentProduct.id}`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -113,7 +112,7 @@ export default function ProductsPage() {
 
   const removeProduct = async (id: number) => {
     const token = await AsyncStorage.getItem('token');
-    fetch(`http://localhost:3000/products/${id}`, { 
+    fetch(`${API_BASE_URL}/products/${id}`, { 
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     })

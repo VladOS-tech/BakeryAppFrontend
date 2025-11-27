@@ -1,7 +1,9 @@
+import { API_BASE_URL } from '@/constants/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
 
 export default function LoginScreen({ navigation }: any) {
   const [phone, setPhone] = useState('');
@@ -15,7 +17,7 @@ export default function LoginScreen({ navigation }: any) {
       return;
     }
     try {
-      const res = await fetch('http://localhost:3000/login', {
+      const res = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, password }),
